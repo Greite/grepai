@@ -37,6 +37,7 @@ var (
 	watchStop       bool
 	watchWorkspace  string
 	watchNoUI       bool
+	watchAutoInit   bool
 )
 
 var (
@@ -93,6 +94,7 @@ func init() {
 	watchCmd.Flags().BoolVar(&watchStop, "stop", false, "Stop the background watcher")
 	watchCmd.Flags().StringVar(&watchWorkspace, "workspace", "", "Workspace name for multi-project mode")
 	watchCmd.Flags().BoolVar(&watchNoUI, "no-ui", false, "Disable interactive UI in foreground mode")
+	watchCmd.Flags().BoolVar(&watchAutoInit, "auto-init", false, "Generate config from GREPAI_* env vars if not present")
 }
 
 func runWatch(cmd *cobra.Command, args []string) error {
@@ -109,6 +111,13 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	}
 	if activeFlags > 1 {
 		return fmt.Errorf("flags --background, --status, and --stop are mutually exclusive")
+	}
+
+	// Auto-init: generate config from env vars if not present
+	if watchAutoInit {
+		if err := config.GenerateFromEnv("."); err != nil {
+			return fmt.Errorf("auto-init failed: %w", err)
+		}
 	}
 
 	// Determine log directory
